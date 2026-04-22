@@ -1,0 +1,33 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack notify",
+        "description": "slack-ping-on-stop: sends a Slack message when Claude finishes a task"
+      },
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" typefully draft",
+        "description": "typefully-draft-queue: queues any content output as a Typefully draft"
+      },
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" zapier fire",
+        "description": "zapier-webhook: fires a Zapier webhook with the session payload on task completion"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion log-session",
+        "description": "notion-session-log: writes a session summary entry to a Notion database"
+      },
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack daily-digest",
+        "description": "daily-digest-slack: sends a structured summary of the session to a Slack channel"
+      }
+    ]
+  }
+}

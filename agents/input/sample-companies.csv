@@ -1,0 +1,6 @@
+company_name,industry,employee_count,job_postings,recent_news,tech_stack,funding_info,linkedin_activity
+Nextera Health,Healthcare SaaS,120,"3 Senior Engineers, 1 VP Sales, 2 SDRs","Expanded into telehealth; partnered with Mayo Clinic","AWS, React, PostgreSQL, Snowflake","Series B $28M closed Jan 2026","CEO posted about 2x ARR growth; 15 new hires announced"
+Vaultline Security,Cybersecurity,45,"1 DevOps Engineer","","Python, Django, Splunk, CrowdStrike","Seed $4M in 2024","Sparse activity; CTO shared article on zero-trust"
+Greenway Logistics,Supply Chain & Logistics,800,"12 Warehouse Ops, 5 Data Analysts, 2 ML Engineers","Acquired regional competitor; opened 3 new distribution centers","SAP, Tableau, custom ERP, AWS","No recent funding","VP Ops posted about supply chain disruptions; multiple employees sharing job openings"
+BrightLoop Education,EdTech,30,"","Laid off 20% of staff; pivoting from B2C to B2B","Firebase, Vue.js, Stripe","Series A $6M (18 months ago, no follow-on)","CEO posted about pivot; low engagement on company page"
+Meridian Financial,Fintech,250,"4 Compliance Officers, 2 Product Managers, 1 CISO","New SEC regulations affecting their product category; launched new compliance module","Java, Kafka, MongoDB, Kubernetes","Series C $52M closed Dec 2025","Active thought leadership from CTO; company page posts 3x/week; multiple execs engaging"

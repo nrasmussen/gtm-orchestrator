@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion cost-log",
+        "description": "cost-tracker-notion: logs session token usage and estimated cost to a Notion cost-tracking database"
+      },
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion log-session",
+        "description": "notion-session-log: writes a session summary entry to a Notion database for audit and review"
+      },
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack daily-digest",
+        "description": "daily-digest-slack: sends a structured session digest to a designated Slack channel"
+      },
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" zapier fire",
+        "description": "zapier-webhook: fires a Zapier webhook with the session payload for downstream automation routing"
+      },
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" n8n fire",
+        "description": "n8n-webhook: fires an n8n webhook with the session payload for self-hosted workflow automation"
+      }
+    ]
+  }
+}

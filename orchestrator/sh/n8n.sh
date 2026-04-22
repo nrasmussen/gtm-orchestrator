@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# n8n.sh — fire an n8n webhook
+# Docs: https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/
+# Actions: fire
+set -euo pipefail
+
+PAYLOAD="$(cat)"
+
+if [[ -n "${DRY_RUN:-}" ]]; then
+  echo "DRY_RUN: POST $N8N_WEBHOOK_URL" >&2
+  echo "PAYLOAD: $PAYLOAD" >&2
+  exit 0
+fi
+
+ACTION="$(echo "$PAYLOAD" | python3 -c "import sys,json; print(json.load(sys.stdin).get('action','fire'))")"
+echo "INFO: n8n action=$ACTION" >&2
+
+case "$ACTION" in
+  fire)
+    DATA="$(echo "$PAYLOAD" | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d.get('data',d)))")"
+
+    HTTP_STATUS=$(curl -s -o /tmp/n8n_response.json -w "%{http_code}" \
+      -X POST \
+      -H "Content-Type: application/json" \
+      -d "$DATA" \
+      "${N8N_WEBHOOK_URL:?N8N_WEBHOOK_URL is required}")
+
+    if [[ "$HTTP_STATUS" != "200" && "$HTTP_STATUS" != "201" && "$HTTP_STATUS" != "202" ]]; then
+      echo "ERROR: n8n webhook returned HTTP $HTTP_STATUS" >&2
+      cat /tmp/n8n_response.json >&2
+      exit 1
+    fi
+
+    cat /tmp/n8n_response.json
+    echo "INFO: n8n fire succeeded (HTTP $HTTP_STATUS)" >&2
+    ;;
+  *)
+    echo "ERROR: unknown action '$ACTION'" >&2
+    exit 1
+    ;;
+esac

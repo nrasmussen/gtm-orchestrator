@@ -1,0 +1,12 @@
+field,value
+product_name,Your Product Name
+product_description,"One sentence describing what you sell and who it's for"
+target_industries,"SaaS, Fintech, Healthcare Tech"
+target_company_size_min,50
+target_company_size_max,500
+key_value_props,"Prop 1: what you do and why it matters|Prop 2: second benefit|Prop 3: third benefit"
+common_objections,"We already have a solution for this|Too expensive|Not a priority right now"
+case_studies,"Customer A: result they got|Customer B: result they got"
+sender_name,Your Name
+sender_title,Your Title
+sender_company,Your Company
