@@ -54,6 +54,12 @@ def main():
         if not filename:
             ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             filename = f"transcript_{ts}.md"
+        # Strip directory components — payload comes from upstream Claude/hook
+        # output and must not write outside output_dir.
+        filename = os.path.basename(filename)
+        if not filename or filename in (".", ".."):
+            print("ERROR: invalid filename after sanitization", file=sys.stderr)
+            sys.exit(1)
 
         output_dir = payload.get("output_dir", os.path.join(local_data_dir, "transcripts"))
         Path(output_dir).mkdir(parents=True, exist_ok=True)

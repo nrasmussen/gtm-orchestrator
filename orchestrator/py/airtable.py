@@ -7,6 +7,8 @@
 import json
 import os
 import sys
+from urllib.parse import quote
+
 import requests
 
 def main():
@@ -43,7 +45,7 @@ def main():
             sys.exit(1)
         fields = payload.get("fields", {})
 
-        url = f"https://api.airtable.com/v0/{base_id}/{table}"
+        url = f"https://api.airtable.com/v0/{base_id}/{quote(table, safe='')}"
         body = {"fields": fields}
 
         resp = requests.post(

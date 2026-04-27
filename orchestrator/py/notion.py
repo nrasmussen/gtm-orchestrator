@@ -106,11 +106,16 @@ def main():
         if parent_type != "database_id":
             print("ERROR: cost-log requires database_id (or NOTION_COST_DATABASE_ID)", file=sys.stderr)
             sys.exit(1)
+        try:
+            amount = float(payload.get("amount", 0) or 0)
+        except (TypeError, ValueError):
+            print(f"WARNING: non-numeric amount {payload.get('amount')!r}, defaulting to 0", file=sys.stderr)
+            amount = 0.0
         body = {
             "parent": {"database_id": parent_id},
             "properties": {
                 "Description": {"title": [{"text": {"content": payload.get("description", "")}}]},
-                "Amount": {"number": float(payload.get("amount", 0))},
+                "Amount": {"number": amount},
             },
         }
         resp = requests.post(PAGES_URL, json=body, headers=_headers(), timeout=20)

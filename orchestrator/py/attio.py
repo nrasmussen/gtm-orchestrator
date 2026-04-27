@@ -7,6 +7,8 @@
 import json
 import os
 import sys
+from urllib.parse import quote
+
 import requests
 
 
@@ -38,7 +40,7 @@ def main():
         attributes = payload.get("attributes", {})
         matching_attribute = payload.get("matching_attribute", "email_addresses")
 
-        url = f"https://api.attio.com/v2/objects/{object_type}/records"
+        url = f"https://api.attio.com/v2/objects/{quote(object_type, safe='')}/records"
         body = {"data": {"values": attributes}}
         resp = requests.put(
             url,

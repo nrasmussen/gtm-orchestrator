@@ -7,6 +7,8 @@
 import json
 import os
 import sys
+from urllib.parse import quote
+
 import requests
 
 
@@ -40,7 +42,7 @@ def main():
             print("ERROR: 'file_key' and 'node_id' are required", file=sys.stderr)
             sys.exit(1)
 
-        url = f"https://api.figma.com/v1/images/{file_key}"
+        url = f"https://api.figma.com/v1/images/{quote(file_key, safe='')}"
         params = {
             "ids": node_id,
             "format": payload.get("format", "png"),
