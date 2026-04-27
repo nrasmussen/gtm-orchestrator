@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/discord.sh notify
+orchestrator/run.sh discord notify
 ```
 
 The script reads session context from stdin and sends a POST request to the configured Discord webhook URL.

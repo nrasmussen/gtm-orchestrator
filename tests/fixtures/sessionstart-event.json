@@ -1,0 +1,5 @@
+{
+  "session_id": "abc123",
+  "source": "startup",
+  "hook_event_name": "SessionStart"
+}

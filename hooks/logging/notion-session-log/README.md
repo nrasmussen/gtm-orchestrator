@@ -9,7 +9,7 @@ Fires on the `SessionEnd` event, which Claude Code triggers once when the sessio
 ## What it runs
 
 ```
-orchestrator/sh/notion.sh log-session
+orchestrator/run.sh notion log-session
 ```
 
 The script reads the full session summary from stdin and creates or updates a Notion database entry via the Notion API.
@@ -19,11 +19,4 @@ The script reads the full session summary from stdin and creates or updates a No
 | Variable | Description |
 |---|---|
 | `NOTION_API_KEY` | Internal integration token from your Notion integration settings |
-| `NOTION_SESSION_LOG_DB` | ID of the Notion database that stores session log entries |
-
-## Optional environment variables
-
-| Variable | Description |
-|---|---|
-| `NOTION_SESSION_LOG_ICON` | Emoji or external URL to use as the page icon |
-| `NOTION_SESSION_LOG_COVER` | External image URL to use as the page cover |
+| `NOTION_PARENT_PAGE_ID` | Page ID under which session log pages are created |

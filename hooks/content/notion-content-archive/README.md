@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/notion.sh save-content
+orchestrator/run.sh notion save-content
 ```
 
 The script scans the session output for content blocks and creates one Notion page per content piece in the configured archive database.
@@ -19,11 +19,6 @@ The script scans the session output for content blocks and creates one Notion pa
 | Variable | Description |
 |---|---|
 | `NOTION_API_KEY` | Internal integration token from your Notion integration settings |
-| `NOTION_CONTENT_ARCHIVE_DB` | ID of the Notion database used as the content archive |
+| `NOTION_PARENT_PAGE_ID` | Page ID under which new content pages are created |
 
-## Optional environment variables
-
-| Variable | Description |
-|---|---|
-| `NOTION_CONTENT_TAG_PROPERTY` | Name of the multi-select property used to tag content type (default: `Tags`) |
-| `NOTION_CONTENT_STATUS_PROPERTY` | Name of the status property to set on new entries (default: `Status`) |
+To route content into a specific Notion database instead, override `parent_id` in the hook command's stdin payload (e.g. via a small wrapper script) or bridge through Zapier/Make.

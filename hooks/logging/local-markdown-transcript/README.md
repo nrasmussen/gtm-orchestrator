@@ -9,7 +9,7 @@ Fires on the `SessionEnd` event, which Claude Code triggers once when the sessio
 ## What it runs
 
 ```
-orchestrator/sh/local.sh save-transcript
+orchestrator/run.sh local save-transcript
 ```
 
 The script reads the session context from stdin and writes a `.md` file to the configured output directory, naming the file with the session ID and a timestamp.

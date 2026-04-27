@@ -9,7 +9,7 @@ Fires on the `PostToolUse` event, which triggers after every tool the agent uses
 ## What it runs
 
 ```
-orchestrator/sh/hubspot.sh upsert
+orchestrator/run.sh hubspot upsert
 ```
 
 The script parses the tool result payload for contact signals and calls the HubSpot Contacts API to upsert the record using email as the unique key.

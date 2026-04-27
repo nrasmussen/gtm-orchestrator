@@ -9,7 +9,7 @@ Fires on the `PostToolUse` event, which triggers after every tool the agent uses
 ## What it runs
 
 ```
-orchestrator/sh/attio.sh upsert
+orchestrator/run.sh attio upsert
 ```
 
 The script parses the tool result from the hook payload, extracts any company signals, and calls the Attio API to upsert a company record.

@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/typefully.sh draft
+orchestrator/run.sh typefully draft
 ```
 
 The script inspects the session output for content marked for social publishing and creates draft entries in Typefully via its API.

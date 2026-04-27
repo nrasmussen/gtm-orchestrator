@@ -9,7 +9,7 @@ Fires on the `Notification` event, which Claude Code emits when it wants to surf
 ## What it runs
 
 ```
-orchestrator/sh/slack.sh approval
+orchestrator/run.sh slack approval
 ```
 
 The script formats the notification payload from stdin into a Slack message, optionally with an action button if the notification type is an approval request.
@@ -18,11 +18,6 @@ The script formats the notification payload from stdin into a Slack message, opt
 
 | Variable | Description |
 |---|---|
-| `SLACK_BOT_TOKEN` | OAuth bot token for your Slack app (`xoxb-...`) |
-| `SLACK_APPROVAL_CHANNEL` | Channel ID or name where approval alerts are posted |
+| `SLACK_WEBHOOK_URL` | Incoming webhook URL for the channel where approval alerts are posted |
 
-## Optional environment variables
-
-| Variable | Description |
-|---|---|
-| `SLACK_APPROVAL_MENTION` | User or group ID to `@mention` in the alert (e.g. `@here` or a user ID) |
+The webhook URL already encodes the destination channel; no separate channel/token vars are needed. Mentions can be embedded in the notification text emitted by Claude Code (e.g. include `<!here>` in the message text).

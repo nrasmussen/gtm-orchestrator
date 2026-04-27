@@ -2,8 +2,13 @@
   "hooks": {
     "PostToolUse": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" lemlist add-lead"
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" lemlist add-lead"
+          }
+        ]
       }
     ]
   }

@@ -9,7 +9,7 @@ Fires on the `PostToolUse` event, which triggers after every tool the agent uses
 ## What it runs
 
 ```
-orchestrator/sh/linear.sh version
+orchestrator/run.sh linear version
 ```
 
 The script reads the tool result from the hook payload and posts a version comment or creates a version sub-issue on the configured Linear ticket.
@@ -18,12 +18,5 @@ The script reads the tool result from the hook payload and posts a version comme
 
 | Variable | Description |
 |---|---|
-| `LINEAR_API_KEY` | Personal API key from your Linear account settings |
-| `LINEAR_DESIGN_ISSUE_ID` | ID of the Linear issue to attach version records to |
-
-## Optional environment variables
-
-| Variable | Description |
-|---|---|
-| `LINEAR_VERSION_PREFIX` | String prefix for version labels (default: `v`) |
-| `LINEAR_VERSION_LABEL_ID` | Label ID to apply to version sub-issues for easy filtering |
+| `LINEAR_API_KEY` | API key from Settings > API in Linear |
+| `LINEAR_TEAM_ID` | Default team ID for new versions / projects |

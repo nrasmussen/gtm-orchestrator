@@ -2,33 +2,51 @@
   "hooks": {
     "PostToolUse": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" attio upsert",
-        "description": "attio-upsert-company: upserts company data to Attio CRM after any tool use that produces company context"
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" attio upsert"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" hubspot upsert",
-        "description": "hubspot-upsert-contact: upserts contact data to HubSpot after any tool use that produces contact context"
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" hubspot upsert"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" airtable append",
-        "description": "airtable-log-row: appends a row to an Airtable base with the tool use output"
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" airtable append"
+          }
+        ]
       }
     ],
     "Stop": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" lemlist push-sequence",
-        "description": "lemlist-push-sequence: pushes any leads identified in the session to a Lemlist sequence on task completion"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" lemlist push-sequence"
+          }
+        ]
       }
     ],
     "Notification": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack approval",
-        "description": "slack-approval-alert: sends a Slack message requesting human approval when Claude raises a notification"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack approval"
+          }
+        ]
       }
     ]
   }

@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/figma.sh export
+orchestrator/run.sh figma export
 ```
 
 The script reads any Figma frame IDs surfaced during the session, calls the Figma Export API, and writes the resulting image files to the configured output directory.
@@ -18,13 +18,6 @@ The script reads any Figma frame IDs surfaced during the session, calls the Figm
 
 | Variable | Description |
 |---|---|
-| `FIGMA_ACCESS_TOKEN` | Personal access token from your Figma account settings |
-| `FIGMA_FILE_KEY` | Key of the Figma file containing the frames to export |
-| `FIGMA_EXPORT_DIR` | Local directory path where exported images are saved |
+| `FIGMA_API_KEY` | Personal access token from your Figma account settings |
 
-## Optional environment variables
-
-| Variable | Description |
-|---|---|
-| `FIGMA_EXPORT_FORMAT` | Image format for exports: `png`, `svg`, `jpg`, or `pdf` (default: `png`) |
-| `FIGMA_EXPORT_SCALE` | Scale multiplier for raster exports (default: `2` for 2x resolution) |
+The Stop event payload should include `file_key` and `node_id` so the handler knows which frame to export. The handler returns the Figma-hosted image URL on stdout — pipe to a downstream hook (e.g. Notion or Slack) to persist or share.

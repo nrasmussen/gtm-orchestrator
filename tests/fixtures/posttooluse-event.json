@@ -1,0 +1,8 @@
+{
+  "session_id": "abc123",
+  "transcript_path": "/tmp/example.jsonl",
+  "tool_name": "Write",
+  "tool_input": {"file_path": "/tmp/x.txt", "content": "hi"},
+  "tool_response": {"success": true},
+  "hook_event_name": "PostToolUse"
+}

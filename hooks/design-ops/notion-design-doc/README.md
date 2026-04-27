@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/notion.sh design-doc
+orchestrator/run.sh notion design-doc
 ```
 
 The script formats the design outputs from the session into a structured Notion page and creates or updates the relevant page in the configured database.
@@ -19,11 +19,4 @@ The script formats the design outputs from the session into a structured Notion 
 | Variable | Description |
 |---|---|
 | `NOTION_API_KEY` | Internal integration token from your Notion integration settings |
-| `NOTION_DESIGN_DOC_DB` | ID of the Notion database where design documents are stored |
-
-## Optional environment variables
-
-| Variable | Description |
-|---|---|
-| `NOTION_DESIGN_DOC_TEMPLATE_ID` | ID of an existing Notion page to use as a template for new design docs |
-| `NOTION_DESIGN_DOC_PARENT_PAGE_ID` | ID of the parent page under which new design doc pages are created |
+| `NOTION_PARENT_PAGE_ID` | Page ID under which new design doc pages are created |

@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/slack.sh notify
+orchestrator/run.sh slack notify
 ```
 
 The script reads session context from stdin (JSON provided by Claude Code) and posts a notification to the configured Slack channel.
@@ -18,11 +18,6 @@ The script reads session context from stdin (JSON provided by Claude Code) and p
 
 | Variable | Description |
 |---|---|
-| `SLACK_BOT_TOKEN` | OAuth bot token for your Slack app (`xoxb-...`) |
-| `SLACK_NOTIFY_CHANNEL` | Channel ID or name to post the notification into |
+| `SLACK_WEBHOOK_URL` | Incoming webhook URL for the channel you want messages posted to |
 
-## Optional environment variables
-
-| Variable | Description |
-|---|---|
-| `SLACK_NOTIFY_TEMPLATE` | Path to a custom message template file |
+The webhook URL already encodes the destination channel; no separate channel/token vars are needed.

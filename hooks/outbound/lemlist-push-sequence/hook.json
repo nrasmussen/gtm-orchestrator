@@ -2,8 +2,12 @@
   "hooks": {
     "Stop": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" lemlist push-sequence"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" lemlist push-sequence"
+          }
+        ]
       }
     ]
   }

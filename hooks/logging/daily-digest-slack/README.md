@@ -9,7 +9,7 @@ Fires on the `SessionEnd` event, which Claude Code triggers once when the sessio
 ## What it runs
 
 ```
-orchestrator/sh/slack.sh daily-digest
+orchestrator/run.sh slack daily-digest
 ```
 
 The script appends the current session summary to a local daily accumulator file and either creates a new Slack message or updates the existing day's message via the Slack API.
@@ -18,12 +18,6 @@ The script appends the current session summary to a local daily accumulator file
 
 | Variable | Description |
 |---|---|
-| `SLACK_BOT_TOKEN` | OAuth bot token for your Slack app (`xoxb-...`) |
-| `SLACK_DIGEST_CHANNEL` | Channel ID or name where the daily digest is posted |
+| `SLACK_WEBHOOK_URL` | Incoming webhook URL for the channel where the daily digest is posted |
 
-## Optional environment variables
-
-| Variable | Description |
-|---|---|
-| `DIGEST_ACCUMULATOR_DIR` | Directory for the local accumulator files (default: `/tmp/claude-digests`) |
-| `SLACK_DIGEST_POST_HOUR` | Hour (0-23) at which the final digest is pinned (default: first session past midnight flushes the previous day) |
+The current implementation posts a fresh message per `SessionEnd`. Aggregating multiple sessions into a single updated message requires a Slack bot token (`chat.update`); use Zapier/n8n as a bridge if you need that behavior.

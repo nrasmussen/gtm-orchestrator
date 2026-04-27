@@ -2,8 +2,12 @@
   "hooks": {
     "SessionEnd": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" local save-transcript"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" local save-transcript"
+          }
+        ]
       }
     ]
   }

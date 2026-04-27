@@ -1,228 +1,253 @@
 # Claude Code Hooks for GTM
 
-Claude Code hooks for GTM teams. Trigger real actions in Slack, Apollo, Lemlist, Notion, Google Sheets, and 15+ other tools when Claude finishes work.
+Claude Code hooks, skills, and subagents for go-to-market teams. Trigger real actions in Slack, Apollo, Lemlist, Notion, Linear, Figma, Google Sheets, and 14+ other tools when Claude finishes work — and use a curated library of GTM skills and outbound agents from inside any session.
 
 ---
 
-## The 3-layer system
+## The three-layer system
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  CLAUDE CODE SESSION                                    │
-│                                                         │
-│  1. SKILLS (from claude-md-repo, copied into /skills/)  │
-│     Pre-written instruction files that tell Claude      │
-│     HOW to do GTM work (enrichment, outreach, etc.)     │
-│           ↓                                             │
-│  2. HOOKS (settings.json snippets in /hooks/)           │
-│     Fire on Claude Code lifecycle events (Stop,         │
-│     PostToolUse, SessionEnd, Notification, etc.)        │
-│           ↓                                             │
-│  3. ORCHESTRATOR (/orchestrator/)                       │
-│     Shell and Python scripts that read the hook's       │
-│     JSON payload via stdin and execute against real     │
-│     APIs or MCP servers (Slack, Apollo, Lemlist, etc.)  │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  CLAUDE CODE SESSION                                        │
+│                                                             │
+│  1. SKILLS  (skills/<name>/SKILL.md → ~/.claude/skills/)    │
+│     Pre-written instruction modules that tell Claude        │
+│     HOW to do GTM work — campaign building, lead            │
+│     enrichment, personalization, signal monitoring.         │
+│           ↓                                                 │
+│  2. AGENTS + COMMANDS (agents/*.md, agents/commands/*.md)   │
+│     Subagents (lead-prioritizer, prospect-profiler, etc.)   │
+│     and the /outbound-pipeline slash command that chains    │
+│     them into a 5-stage outbound workflow.                  │
+│           ↓                                                 │
+│  3. HOOKS + ORCHESTRATOR (hooks/, orchestrator/)            │
+│     settings.json fragments that fire on Claude Code        │
+│     lifecycle events (Stop, PostToolUse, SessionStart…)     │
+│     and Python handlers that hit real REST APIs.            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-Skills = what to do. Hooks = when to act. Orchestrator = how to actually send it somewhere.
+Skills = what to do. Agents = who does it. Hooks = when to act. Orchestrator = how to actually send it somewhere.
 
 ---
 
-## What this repo gives you
+## What you get
 
-- **32 hooks** across 8 categories (notifications, logging, content, CRM, outbound, design-ops, automation, bootstrap)
-- **15 integrations** (Slack, Discord, Gmail, Notion, Apollo, HubSpot, Attio, Airtable, Google Sheets, Lemlist, Instantly, Smartlead, Clay, Typefully, Zapier/n8n/Make) with both shell and Python implementations
-- **17 content prompts** for pitch decks, one-pagers, carousels, case studies, and proposals
-- **Skill library** synced from [claude-md-repo](https://github.com/janskuba/claude-md-repo) and [outbound-agents](https://github.com/janskuba/outbound-agents)
-- **5 role-based starter packs** (founder, sales, marketing, ops, design) -- paste-ready settings files
-- **Setup and validation scripts** to get running without debugging
+- **30 hooks** across 8 categories (notifications, logging, content, CRM, outbound, design-ops, automation, bootstrap)
+- **17 integrations** (Slack, Discord, Notion, Apollo, HubSpot, Attio, Airtable, Google Sheets, Lemlist, Instantly, Smartlead, Clay, Typefully, Linear, Figma, Zapier/n8n/Make) — all direct REST, no MCP dependency required for hooks
+- **6 GTM skills** (campaign-builder, lead-enrichment, personalization-writer, pipeline-reviewer, reply-classifier, signal-monitor)
+- **7 subagents** + the `/outbound-pipeline` slash command that orchestrates them
+- **17 content prompts** for pitch decks, one-pagers, carousels, case studies, ICP cards, proposals
+- **5 role-based starter packs** (founder, sales, marketing, ops, design) — paste-ready settings files
+- **One-shot installer**, validator, and uninstaller
 
 ---
 
 ## Quickstart
 
 ```bash
-git clone https://github.com/janskuba/claude-code-hooks-gtm.git
-cd claude-code-hooks-gtm
-./scripts/setup.sh
+git clone https://github.com/janskuba/go-to-market-orchestrator.git
+cd go-to-market-orchestrator
+./scripts/install.sh
 # Fill in at least SLACK_WEBHOOK_URL in .env
 ./scripts/validate.sh
 ```
 
-Then copy the contents of `hooks/notifications/slack-ping-on-stop/hook.json` into your `~/.claude/settings.json`. Start a Claude Code session, finish any task, and you will get a Slack message.
+Start Claude Code, give it any task, and watch your Slack channel light up when it finishes. Full walkthrough: [QUICKSTART.md](QUICKSTART.md).
 
-For the full walkthrough, see [QUICKSTART.md](QUICKSTART.md).
+---
+
+## How a hook fires
+
+```
+Claude Code event (Stop / PostToolUse / SessionStart / Notification / SessionEnd)
+   └──→ ~/.claude/settings.json hook entry
+         └──→ bash $CLAUDE_GTM_DIR/orchestrator/run.sh <service> <action>
+               └──→ orchestrator/dispatch.py
+                     - reads stdin (Claude's hook payload)
+                     - merges <action> into payload["action"]
+                     - exec orchestrator/py/<service>.py
+                       └──→ POST to Slack / Apollo / Notion / …
+```
+
+`dispatch.py` exists so a single contract — `payload["action"]` — drives every handler. The CLI action overrides any value in stdin; handlers fall back to a sensible default if neither is present.
 
 ---
 
 ## Hook index
 
-Every hook lives in `hooks/<category>/<hook-name>/` with a `hook.json` snippet and a plain-English `README.md`. Hooks are organized by what they do for your team.
+Every hook lives in `hooks/<category>/<hook-name>/` with a `hook.json` snippet and a plain-English `README.md`.
 
 ### Team notifications
 
-| # | Hook | Event | What it does |
-|---|------|-------|--------------|
-| 1 | slack-ping-on-stop | Stop | Sends a Slack message when Claude finishes |
-| 2 | slack-approval-alert | Notification | Pings Slack when Claude needs approval |
-| 3 | discord-webhook-on-stop | Stop | Posts to Discord when Claude finishes |
-| 4 | email-session-digest | SessionEnd | Emails a session summary via Gmail |
+| Hook | Event | What it does |
+|------|-------|--------------|
+| slack-ping-on-stop | Stop | Sends a Slack message when Claude finishes |
+| slack-approval-alert | Notification | Pings Slack when Claude needs approval |
+| discord-webhook-on-stop | Stop | Posts to Discord when Claude finishes |
 
 ### Reporting and logging
 
-| # | Hook | Event | What it does |
-|---|------|-------|--------------|
-| 5 | notion-session-log | SessionEnd | Logs session details to a Notion database |
-| 6 | local-markdown-transcript | SessionEnd | Saves session transcript to a local .md file |
-| 7 | cost-tracker-notion | SessionEnd | Logs token usage and cost to Notion |
-| 8 | daily-digest-slack | SessionEnd | Posts a daily work summary to Slack |
-| 9 | sheets-append-row | PostToolUse | Appends activity data to a Google Sheet |
+| Hook | Event | What it does |
+|------|-------|--------------|
+| notion-session-log | SessionEnd | Logs session details to Notion |
+| local-markdown-transcript | SessionEnd | Saves session transcript locally |
+| cost-tracker-notion | SessionEnd | Logs token usage and cost to Notion |
+| daily-digest-slack | SessionEnd | Posts a session summary to Slack |
+| sheets-append-row | PostToolUse | Appends activity to Google Sheets |
 
 ### Content production
 
-| # | Hook | Event | What it does |
-|---|------|-------|--------------|
-| 10 | typefully-draft-queue | Stop | Queues a Typefully draft from Claude's output |
-| 11 | notion-content-archive | Stop | Archives generated content to Notion |
-| 12 | gmail-drafts-save | Stop | Saves content as a Gmail draft |
-| 13 | linear-ticket-from-brief | PostToolUse | Creates a Linear ticket when Claude writes a file |
-| 14 | claude-design-output-to-notion | Stop | Saves design output to Notion |
+| Hook | Event | What it does |
+|------|-------|--------------|
+| typefully-draft-queue | Stop | Queues a Typefully draft from Claude's output |
+| notion-content-archive | Stop | Archives generated content to Notion |
+| linear-ticket-from-brief | PostToolUse | Creates a Linear ticket when Claude writes a file |
+| claude-design-output-to-notion | Stop | Saves design output to Notion |
 
 ### Prospecting and CRM
 
-| # | Hook | Event | What it does |
-|---|------|-------|--------------|
-| 15 | apollo-enrich-contact | PostToolUse | Enriches a contact via Apollo.io |
-| 16 | attio-upsert-company | PostToolUse | Creates or updates a company in Attio |
-| 17 | hubspot-upsert-contact | PostToolUse | Creates or updates a contact in HubSpot |
-| 18 | airtable-log-row | PostToolUse | Appends a row to an Airtable base |
-| 19 | sheets-log-enrichment | Stop | Logs enrichment results to Google Sheets |
+| Hook | Event | What it does |
+|------|-------|--------------|
+| apollo-enrich-contact | PostToolUse | Enriches a contact via Apollo.io |
+| attio-upsert-company | PostToolUse | Creates or updates a company in Attio |
+| hubspot-upsert-contact | PostToolUse | Creates or updates a contact in HubSpot |
+| airtable-log-row | PostToolUse | Appends a row to Airtable |
+| sheets-log-enrichment | Stop | Logs enrichment results to Google Sheets |
 
 ### Outbound and sequencing
 
-| # | Hook | Event | What it does |
-|---|------|-------|--------------|
-| 20 | apollo-search-leads | Stop | Searches Apollo.io for leads matching criteria |
-| 21 | lemlist-add-lead | PostToolUse | Adds a lead to a Lemlist campaign |
-| 22 | lemlist-push-sequence | Stop | Pushes a full sequence to Lemlist |
-| 23 | instantly-push-campaign | Stop | Pushes a campaign to Instantly |
-| 24 | smartlead-push-campaign | Stop | Pushes a campaign to Smartlead |
-| 25 | clay-table-sync | Stop | Syncs data to a Clay table via webhook |
+| Hook | Event | What it does |
+|------|-------|--------------|
+| apollo-search-leads | Stop | Searches Apollo for leads matching criteria |
+| lemlist-add-lead | PostToolUse | Adds a lead to a Lemlist campaign |
+| lemlist-push-sequence | Stop | Starts a Lemlist sequence for a lead |
+| instantly-push-campaign | Stop | Pushes a lead to Instantly |
+| smartlead-push-campaign | Stop | Pushes a lead to Smartlead |
+| clay-table-sync | Stop | Syncs data to a Clay table via webhook |
 
 ### Design ops
 
-| # | Hook | Event | What it does |
-|---|------|-------|--------------|
-| 26 | figma-export-frame | Stop | Exports a Figma frame via MCP |
-| 27 | notion-design-doc | Stop | Creates a design doc in Notion |
-| 28 | linear-design-version | PostToolUse | Logs a design version to Linear |
+| Hook | Event | What it does |
+|------|-------|--------------|
+| figma-export-frame | Stop | Exports a Figma frame via REST |
+| notion-design-doc | Stop | Creates a design doc in Notion |
+| linear-design-version | PostToolUse | Logs a design version to Linear |
 
 ### Automation bridges
 
-| # | Hook | Event | What it does |
-|---|------|-------|--------------|
-| 29 | zapier-webhook | Stop | Fires a Zapier webhook (configurable event) |
-| 30 | n8n-webhook | Stop | Fires an n8n webhook (configurable event) |
-| 31 | make-webhook | Stop | Fires a Make webhook (configurable event) |
+| Hook | Event | What it does |
+|------|-------|--------------|
+| zapier-webhook | Stop | Fires a Zapier webhook (configurable downstream) |
+| n8n-webhook | Stop | Fires an n8n webhook |
+| make-webhook | Stop | Fires a Make webhook |
 
 ### Bootstrap
 
-| # | Hook | Event | What it does |
-|---|------|-------|--------------|
-| 32 | skill-loader-on-start | SessionStart | Loads skill files when a session begins |
+| Hook | Event | What it does |
+|------|-------|--------------|
+| skill-loader-on-start | SessionStart | Lists available local skills at session start |
 
 ---
 
 ## Integration index
 
-Every integration has both a shell (`orchestrator/sh/`) and Python (`orchestrator/py/`) implementation. Both read JSON from stdin and respect `DRY_RUN=1`.
+Every integration is a Python handler in `orchestrator/py/<service>.py`. Handlers read JSON from stdin, respect `DRY_RUN=1`, and call REST APIs directly. No MCP server is required for hooks to work.
 
-| Tool | Method | Auth | Required env vars |
-|------|--------|------|-------------------|
-| Slack | Incoming webhook | Webhook URL | `SLACK_WEBHOOK_URL` |
-| Discord | Incoming webhook | Webhook URL | `DISCORD_WEBHOOK_URL` |
-| Gmail | MCP | OAuth via MCP | (via `claude mcp`) |
-| Notion | MCP | MCP token | (via `claude mcp`) |
-| Apollo.io | REST API | API key | `APOLLO_API_KEY` |
-| Attio | MCP + REST fallback | API key | `ATTIO_API_KEY` |
-| HubSpot | REST API | Private app token | `HUBSPOT_TOKEN` |
-| Airtable | REST API | Personal access token | `AIRTABLE_TOKEN`, `AIRTABLE_BASE_ID` |
-| Google Sheets | REST API | API key | `GOOGLE_SHEETS_API_KEY`, `GOOGLE_SHEETS_SPREADSHEET_ID` |
-| Lemlist | REST API | API key | `LEMLIST_API_KEY` |
-| Instantly | REST API | API key | `INSTANTLY_API_KEY` |
-| Smartlead | REST API | API key | `SMARTLEAD_API_KEY` |
-| Clay | Webhook | Webhook URL | `CLAY_WEBHOOK_URL` |
-| Typefully | REST API | API key | `TYPEFULLY_API_KEY` |
-| Zapier / n8n / Make | Webhook | Webhook URL | `*_WEBHOOK_URL` |
+| Tool | Auth | Required env vars |
+|------|------|-------------------|
+| Slack | Webhook | `SLACK_WEBHOOK_URL` |
+| Discord | Webhook | `DISCORD_WEBHOOK_URL` |
+| Notion | API token | `NOTION_API_KEY`, `NOTION_PARENT_PAGE_ID` (or `NOTION_COST_DATABASE_ID` for cost log) |
+| Figma | API token | `FIGMA_API_KEY` |
+| Linear | API token | `LINEAR_API_KEY`, `LINEAR_TEAM_ID` |
+| Apollo.io | API key | `APOLLO_API_KEY` |
+| Attio | API key | `ATTIO_API_KEY` |
+| HubSpot | Private app token | `HUBSPOT_TOKEN` |
+| Airtable | Personal access token | `AIRTABLE_TOKEN`, `AIRTABLE_BASE_ID` |
+| Google Sheets | API key | `GOOGLE_SHEETS_API_KEY`, `GOOGLE_SHEETS_SPREADSHEET_ID` |
+| Lemlist | API key | `LEMLIST_API_KEY` |
+| Instantly | API key | `INSTANTLY_API_KEY` |
+| Smartlead | API key | `SMARTLEAD_API_KEY` |
+| Clay | Webhook | `CLAY_WEBHOOK_URL` |
+| Typefully | API key | `TYPEFULLY_API_KEY` |
+| Zapier / n8n / Make | Webhook | `*_WEBHOOK_URL` |
 
 ---
 
-## Skills and agents
+## Skills, agents, and commands
 
-The `/skills/` and `/agents/` directories are synced from two companion repos:
+| Path | Installs to | Purpose |
+|------|-------------|---------|
+| `skills/<name>/SKILL.md` | `~/.claude/skills/<name>/SKILL.md` | Auto-invoked skill that teaches Claude how to do a GTM task |
+| `agents/*.md` | `~/.claude/agents/` | Subagents Claude can dispatch via the Task tool |
+| `agents/commands/*.md` | `~/.claude/commands/` | Slash commands (e.g. `/outbound-pipeline`) |
+| `skills/modules/`, `skills/templates/`, `skills/examples/` | (reference, not installed) | Vendored reference material for skill authors |
 
-- **[claude-md-repo](https://github.com/janskuba/claude-md-repo)** -- Skills, modules, and templates for GTM workflows (lead enrichment, campaign building, personalization, and more).
-- **[outbound-agents](https://github.com/janskuba/outbound-agents)** -- Agent definitions for outbound tasks (prospect profiling, sequence building, reply classification, meeting prep).
+The `/outbound-pipeline` command chains 5 subagents (signal-scraper → lead-prioritizer → prospect-profiler → hook-writer → sequence-builder) into a single end-to-end workflow with checkpoint files in `agents/output/`.
 
-Re-run `./scripts/sync-skills.sh` to pull the latest versions.
+To pull the latest skills/agents from upstream repos: `./scripts/sync-skills.sh`. The repo ships with vendored copies, so this is optional.
 
 ---
 
 ## Content prompts
 
-The `/gtm-content-prompts/` directory contains 17 ready-to-use prompts for generating pitch decks, one-pagers, LinkedIn carousels, case studies, ICP cards, and proposals. Each prompt includes a suggested pairing hook so you can automatically save the output to Notion, Linear, or another tool. See the [prompt index](gtm-content-prompts/README.md) for the full list.
+The `/gtm-content-prompts/` directory contains 17 ready-to-use prompts for pitch decks, one-pagers, LinkedIn carousels, case studies, ICP cards, and proposals. Each prompt suggests a hook to pair it with so the output goes to Notion, Linear, or your tool of choice. See [gtm-content-prompts/README.md](gtm-content-prompts/README.md).
 
 ---
 
 ## Role-based starter packs
 
-Instead of assembling hooks one by one, grab a pre-built settings file for your role. Each file is a complete `~/.claude/settings.json` you can paste directly.
+Skip assembling hooks one by one. Each file is a complete `~/.claude/settings.json`:
 
 | Role | File | Hooks included |
 |------|------|----------------|
-| Founder | [full-settings-founder.json](examples/full-settings-founder.json) | Slack ping, Notion session log, Typefully draft, daily digest, Zapier |
+| Founder | [full-settings-founder.json](examples/full-settings-founder.json) | Slack ping, Notion log, Typefully draft, daily digest, Zapier |
 | Sales | [full-settings-sales.json](examples/full-settings-sales.json) | Attio upsert, HubSpot upsert, Lemlist push, Slack approval, Airtable log |
 | Marketing | [full-settings-marketing.json](examples/full-settings-marketing.json) | Typefully draft, Notion archive, design-to-Notion, Linear ticket, Slack ping |
 | Ops | [full-settings-ops.json](examples/full-settings-ops.json) | Cost tracker, Notion session log, daily digest, Zapier, n8n |
 | Design | [full-settings-design.json](examples/full-settings-design.json) | Figma export, design-to-Notion, Linear version, Notion design doc, Slack ping |
 
+Or just run `./scripts/install.sh` to install everything.
+
 ---
 
-## Setup and validation
+## Scripts reference
 
 ```bash
-./scripts/setup.sh      # Creates .env, sets CLAUDE_GTM_DIR in your shell profile
-./scripts/validate.sh    # Checks which integrations are configured and ready
+./scripts/install.sh          # full install (skills + agents + commands + hooks)
+./scripts/install.sh --help   # all flags
+./scripts/uninstall.sh        # remove everything install.sh added
+./scripts/validate.sh         # schema-validate hooks, compile + dry-run handlers, report env state
+./scripts/sync-skills.sh      # pull latest skills/agents from upstream repos (optional)
+./scripts/install-mcps.sh     # OPTIONAL: register MCP servers for Claude to *use* (not for hooks)
 ```
-
-`validate.sh` will tell you exactly which hooks will work based on the env vars you have filled in. Run it after editing `.env` to confirm your setup before pasting hooks into `settings.json`.
 
 ---
 
 ## Dry-run mode
 
-Set `DRY_RUN=1` in your `.env` file (or export it in your shell) to test any hook without actually sending data anywhere. Every orchestrator script will print the request it would have made, then exit cleanly. This lets you verify your hooks are wired correctly before connecting to live APIs.
+Set `DRY_RUN=1` in `.env` (or export it) to make every handler print what it would have sent and exit cleanly. Combine with `validate.sh` for an end-to-end smoke test.
 
 ---
 
 ## FAQ
 
-**Do I need to use every tool?**
-No. Start with one hook and add more as needed. Each hook is independent.
+**Do I need to use every tool?** No. Each hook is independent. Start with one, add more as needed.
 
-**Can I swap one tool for another?**
-Yes. If you use Instantly instead of Lemlist, just point the hook at the Instantly script.
+**What if I don't have an API key for X?** Use the Zapier/n8n/Make webhook bridges as a fallback. They accept any JSON payload and route it anywhere.
 
-**What if I don't have an API key for a tool?**
-Use the webhook-based integrations (Zapier, n8n, Make) as a fallback. They accept any JSON payload and can route it to almost any tool.
+**Why no Gmail integration?** Gmail OAuth setup is heavier than the other integrations. Use Zapier/Make to bridge to Gmail, or contribute a PR.
 
-**How do I verify my setup?**
-Run `./scripts/validate.sh`.
+**How do I verify my setup?** `./scripts/validate.sh`.
+
+**How do I uninstall?** `./scripts/uninstall.sh`. Backups of your previous `settings.json` are preserved as `settings.json.bak.*`.
 
 ---
 
 ## The other two repos
 
-- **[claude-md-repo](https://github.com/janskuba/claude-md-repo)** -- A library of Claude Code skills and templates for GTM workflows. The brain behind the outreach.
-- **[outbound-agents](https://github.com/janskuba/outbound-agents)** -- Pre-built Claude Code agents for outbound sales tasks. The autopilot for your pipeline.
+- **[claude-md-repo](https://github.com/janskuba/claude-md-repo)** — A library of Claude Code skills and templates for GTM workflows.
+- **[outbound-agents](https://github.com/janskuba/outbound-agents)** — Pre-built Claude Code agents for outbound sales tasks.
+
+`./scripts/sync-skills.sh` pulls the latest copies into `skills/` and `agents/`. Use `--no-upstream` if you don't have access — the repo ships with vendored copies.

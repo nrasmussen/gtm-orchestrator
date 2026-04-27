@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/lemlist.sh push-sequence
+orchestrator/run.sh lemlist push-sequence
 ```
 
 The script collects any staged lead records from the session context and submits them as a batch to the configured Lemlist sequence.

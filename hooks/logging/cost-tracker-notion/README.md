@@ -9,7 +9,7 @@ Fires on the `SessionEnd` event, which Claude Code triggers once when the sessio
 ## What it runs
 
 ```
-orchestrator/sh/notion.sh cost-log
+orchestrator/run.sh notion cost-log
 ```
 
 The script extracts token counts and cost estimates from the session context and appends a row to the configured Notion cost-tracking database.
@@ -19,11 +19,4 @@ The script extracts token counts and cost estimates from the session context and
 | Variable | Description |
 |---|---|
 | `NOTION_API_KEY` | Internal integration token from your Notion integration settings |
-| `NOTION_COST_LOG_DB` | ID of the Notion database that stores cost entries |
-
-## Optional environment variables
-
-| Variable | Description |
-|---|---|
-| `COST_CURRENCY` | Currency code for cost display (default: `USD`) |
-| `COST_MODEL_RATE_OVERRIDE` | JSON string mapping model IDs to per-token rates, overriding built-in defaults |
+| `NOTION_COST_DATABASE_ID` | Database ID for cost entries (must have `Description` title and `Amount` number properties) |

@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/instantly.sh push
+orchestrator/run.sh instantly push
 ```
 
 The script collects staged leads and copy from the session context and calls the Instantly API to add them to the configured campaign.

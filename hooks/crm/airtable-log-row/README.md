@@ -9,7 +9,7 @@ Fires on the `PostToolUse` event, which triggers after every tool the agent uses
 ## What it runs
 
 ```
-orchestrator/sh/airtable.sh append
+orchestrator/run.sh airtable append
 ```
 
 The script maps fields from the tool result payload to configured Airtable column names and appends a new record to the target table.

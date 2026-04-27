@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile every Python file
+        run: python -m py_compile orchestrator/dispatch.py orchestrator/py/*.py scripts/lib/*.py
+
+      - name: Lint shell scripts (bash -n)
+        run: |
+          for f in scripts/*.sh tests/*.sh orchestrator/run.sh; do
+            bash -n "$f"
+          done
+
+      - name: Hook schema tests
+        run: ./tests/test_hooks.sh
+
+      - name: Handler dry-run tests
+        run: ./tests/test_handlers.sh
+
+      - name: Dispatch unit tests
+        run: python3 tests/test_dispatch.py

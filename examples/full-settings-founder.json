@@ -2,31 +2,46 @@
   "hooks": {
     "Stop": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack notify",
-        "description": "slack-ping-on-stop: sends a Slack message when Claude finishes a task"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack notify"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" typefully draft",
-        "description": "typefully-draft-queue: queues any content output as a Typefully draft"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" typefully draft"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" zapier fire",
-        "description": "zapier-webhook: fires a Zapier webhook with the session payload on task completion"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" zapier fire"
+          }
+        ]
       }
     ],
     "SessionEnd": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion log-session",
-        "description": "notion-session-log: writes a session summary entry to a Notion database"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion log-session"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack daily-digest",
-        "description": "daily-digest-slack: sends a structured summary of the session to a Slack channel"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack daily-digest"
+          }
+        ]
       }
     ]
   }

@@ -9,20 +9,14 @@ Fires on the `SessionStart` event, which Claude Code triggers once immediately w
 ## What it runs
 
 ```
-orchestrator/sh/local.sh load-skills
+orchestrator/run.sh local load-skills
 ```
 
 The script scans the configured skills directory, reads each skill definition file, and outputs them in a format that Claude Code injects into the session context.
-
-## Required environment variables
-
-| Variable | Description |
-|---|---|
-| `SKILLS_DIR` | Absolute path to the directory containing skill definition files (e.g. `/path/to/montgomery/skills`) |
 
 ## Optional environment variables
 
 | Variable | Description |
 |---|---|
-| `SKILLS_GLOB` | Glob pattern for skill files within `SKILLS_DIR` (default: `**/*.md`) |
-| `SKILLS_MAX_TOKENS` | Maximum total tokens to load from skills before truncating (default: no limit) |
+| `LOCAL_SKILLS_DIR` | Absolute path to the directory containing skill definition files. Defaults to `$LOCAL_DATA_DIR/skills`, which itself defaults to `~/.orchestrator/data/skills`. Each skill must live in `<dir>/<name>/SKILL.md`. |
+| `LOCAL_DATA_DIR` | Base directory for orchestrator data (transcripts, skills). Default: `~/.orchestrator/data`. |

@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/smartlead.sh push
+orchestrator/run.sh smartlead push
 ```
 
 The script reads staged leads and sequence copy from the session context and submits them to the Smartlead API for the configured campaign.

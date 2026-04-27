@@ -9,7 +9,7 @@ Fires on the `Stop` event by default. You can change the event in `hook.json` to
 ## What it runs
 
 ```
-orchestrator/sh/zapier.sh fire
+orchestrator/run.sh zapier fire
 ```
 
 The script reads the session context from stdin and sends an HTTP POST to the configured Zapier webhook URL.

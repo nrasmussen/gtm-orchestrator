@@ -2,31 +2,47 @@
   "hooks": {
     "Stop": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" figma export",
-        "description": "figma-export-frame: triggers a Figma frame export when Claude finishes a design-related task"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" figma export"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion save-design",
-        "description": "claude-design-output-to-notion: saves design prompt output to a Notion design library page"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion save-design"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion design-doc",
-        "description": "notion-design-doc: creates or updates a Notion design documentation page from the session output"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion design-doc"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack notify",
-        "description": "slack-ping-on-stop: sends a Slack notification when a design task is complete"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack notify"
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" linear version",
-        "description": "linear-design-version: creates a Linear ticket logging the design version when a file is written or updated"
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" linear version"
+          }
+        ]
       }
     ]
   }

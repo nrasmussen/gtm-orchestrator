@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/clay.sh sync
+orchestrator/run.sh clay sync
 ```
 
 The script collects lead records and any structured data from the session context and upserts them into the target Clay table via the Clay API.

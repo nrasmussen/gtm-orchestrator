@@ -1,0 +1,5 @@
+{
+  "session_id": "abc123",
+  "message": "Approval required: write to /etc/passwd",
+  "hook_event_name": "Notification"
+}

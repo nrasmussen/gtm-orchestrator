@@ -1,63 +1,67 @@
 #!/usr/bin/env python3
-# figma.py — export assets from Figma via claude mcp call
-# Docs: https://www.figma.com/developers/api
+# figma.py — export node images from Figma via REST API
+# Docs: https://www.figma.com/developers/api#get-images-endpoint
+# Endpoint: https://api.figma.com/v1/images/{file_key}
 # Actions: export
 
 import json
 import os
-import subprocess
 import sys
+import requests
 
-def run_mcp(tool_name: str, tool_input: dict) -> str:
-    result = subprocess.run(
-        ["claude", "mcp", "call", "figma", tool_name],
-        input=json.dumps(tool_input).encode(),
-        capture_output=True,
-    )
-    if result.returncode != 0:
-        stderr = result.stderr.decode()
-        stdout = result.stdout.decode()
-        raise RuntimeError(f"MCP call failed (rc={result.returncode}): {stderr or stdout}")
-    return result.stdout.decode()
 
 def main():
     raw = sys.stdin.read()
     try:
-        payload = json.loads(raw)
+        payload = json.loads(raw) if raw.strip() else {}
     except json.JSONDecodeError as e:
         print(f"ERROR: invalid JSON on stdin: {e}", file=sys.stderr)
         sys.exit(1)
 
     dry_run = os.environ.get("DRY_RUN", "")
+    action = payload.get("action", "export")
 
     if dry_run:
-        print("DRY_RUN: claude mcp call figma", file=sys.stderr)
+        print(f"DRY_RUN: figma {action}", file=sys.stderr)
         print(f"PAYLOAD: {raw}", file=sys.stderr)
         sys.exit(0)
 
-    action = payload.get("action", "export")
-    print(f"INFO: figma action={action}", file=sys.stderr)
-
-    try:
-        if action == "export":
-            tool_input = {
-                "fileKey": payload.get("file_key", ""),
-                "nodeId": payload.get("node_id", ""),
-                "format": payload.get("format", "png"),
-                "scale": payload.get("scale", 2),
-            }
-            result = run_mcp("get_screenshot", tool_input)
-            print(result)
-
-        else:
-            print(f"ERROR: unknown action '{action}'", file=sys.stderr)
-            sys.exit(1)
-
-    except RuntimeError as e:
-        print(f"ERROR: figma mcp call failed: {e}", file=sys.stderr)
+    api_key = os.environ.get("FIGMA_API_KEY", "")
+    if not api_key:
+        print("ERROR: FIGMA_API_KEY is required", file=sys.stderr)
         sys.exit(1)
 
-    print(f"INFO: figma {action} complete", file=sys.stderr)
+    print(f"INFO: figma action={action}", file=sys.stderr)
+
+    if action == "export":
+        file_key = payload.get("file_key", "")
+        node_id = payload.get("node_id", "")
+        if not file_key or not node_id:
+            print("ERROR: 'file_key' and 'node_id' are required", file=sys.stderr)
+            sys.exit(1)
+
+        url = f"https://api.figma.com/v1/images/{file_key}"
+        params = {
+            "ids": node_id,
+            "format": payload.get("format", "png"),
+            "scale": payload.get("scale", 2),
+        }
+        resp = requests.get(
+            url,
+            params=params,
+            headers={"X-Figma-Token": api_key},
+            timeout=20,
+        )
+        if resp.status_code != 200:
+            print(f"ERROR: Figma API HTTP {resp.status_code}: {resp.text}", file=sys.stderr)
+            sys.exit(1)
+        print(resp.text)
+        print(f"INFO: figma export succeeded (HTTP {resp.status_code})", file=sys.stderr)
+
+    else:
+        print(f"ERROR: unknown action '{action}'", file=sys.stderr)
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

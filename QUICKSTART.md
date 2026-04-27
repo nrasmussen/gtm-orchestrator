@@ -1,49 +1,66 @@
 # Quickstart
 
-Get your first hook running in five steps.
+Get your first hook running in three steps.
 
-## Step 1: Clone and set up
+## Step 1: Clone and install
 
 ```bash
-git clone https://github.com/janskuba/claude-code-hooks-gtm.git
-cd claude-code-hooks-gtm
-./scripts/setup.sh
+git clone https://github.com/janskuba/go-to-market-orchestrator.git
+cd go-to-market-orchestrator
+./scripts/install.sh
 ```
 
-This creates your `.env` file from the template and adds `CLAUDE_GTM_DIR` to your shell profile so hooks can find the repo scripts from anywhere.
+`install.sh` does four things in one shot:
 
-## Step 2: Add one API key
+1. Creates your `.env` from the template (if one doesn't exist) and exports `CLAUDE_GTM_DIR` in your shell profile.
+2. Copies all skills from `skills/<name>/SKILL.md` into `~/.claude/skills/<name>/SKILL.md`.
+3. Copies all subagents and slash commands into `~/.claude/agents/` and `~/.claude/commands/`.
+4. Merges every `hooks/*/*/hook.json` into `~/.claude/settings.json`, taking a timestamped backup first.
 
-Open `.env` and fill in `SLACK_WEBHOOK_URL` with your Slack incoming webhook URL. If you do not have one, go to your Slack workspace settings, create an incoming webhook for the channel you want, and paste the URL.
+You can re-run it any time. To install only part of the system:
 
-## Step 3: Verify the setup
+```bash
+./scripts/install.sh --skills-only
+./scripts/install.sh --agents-only
+./scripts/install.sh --hooks-only
+./scripts/install.sh --hooks=slack-ping-on-stop,attio-upsert-company   # cherry-pick
+./scripts/install.sh --symlink                                          # for repo developers
+```
+
+To remove everything later: `./scripts/uninstall.sh`.
+
+## Step 2: Add at least one API key
+
+Open `.env` and fill in `SLACK_WEBHOOK_URL`. You can grab one from your Slack workspace settings: *Apps → Incoming Webhooks → Add to channel*.
+
+## Step 3: Verify and run
 
 ```bash
 ./scripts/validate.sh
 ```
 
-You should see `[OK]` next to Slack. Everything else can be `[MISSING]` for now.
+This validates every hook.json against the Claude Code schema, compiles every Python handler, runs every handler under `DRY_RUN=1`, and reports which integrations are configured.
 
-## Step 4: Install the hook
-
-Open `hooks/notifications/slack-ping-on-stop/hook.json` and copy its contents into `~/.claude/settings.json`. If you already have hooks in your settings file, merge the entries under the `"hooks"` key.
-
-Or skip the manual step and use a starter pack -- copy the whole file for your role:
-
-```bash
-cp examples/full-settings-founder.json ~/.claude/settings.json
-```
-
-## Step 5: Run Claude Code
-
-Open your terminal and start a Claude Code session:
+Then start Claude Code:
 
 ```bash
 claude
 ```
 
-Give Claude any task ("summarize this README", "list files in this directory", anything). When Claude finishes the task, the hook fires and you will see a message appear in your Slack channel within a few seconds.
+Give Claude any task (`summarize this README`, `list files`, anything). When Claude finishes, the Slack hook fires and your channel gets a message.
 
 ---
 
-You just ran your first hook. To add more, browse the `hooks/` directory and paste additional entries into your `settings.json`. To test hooks without sending real requests, add `DRY_RUN=1` to your `.env` file.
+## Dry-run mode
+
+Set `DRY_RUN=1` in `.env` to test any hook without sending real requests. Every handler prints what it *would* have sent and exits cleanly.
+
+## Adding more integrations
+
+Fill in additional API keys in `.env` and re-run `./scripts/validate.sh` to confirm they're picked up. Most hooks fire automatically once their env vars are set — no settings.json edits needed.
+
+## Troubleshooting
+
+- **Hook didn't fire**: confirm Claude Code picked up the new settings (restart your session). Check `~/.claude/settings.json` actually contains the hook by running `./scripts/validate.sh`.
+- **Hook ran but failed silently**: hook stderr is suppressed by default in Claude Code. Run the command manually with the same payload to see the error: `echo '{"action":"notify","text":"hi"}' | bash orchestrator/run.sh slack notify`.
+- **`CLAUDE_GTM_DIR` not set**: `install.sh` adds the export to your shell profile but does not source it for the current shell. Run `source ~/.zshrc` (or `.bashrc`) or open a new terminal.

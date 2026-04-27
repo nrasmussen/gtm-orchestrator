@@ -9,7 +9,7 @@ Fires on the `Stop` event, which Claude Code triggers whenever the agent stops g
 ## What it runs
 
 ```
-orchestrator/sh/notion.sh save-design
+orchestrator/run.sh notion save-design
 ```
 
 The script identifies design-related content in the session output and creates Notion pages in the configured design archive database.
@@ -19,11 +19,4 @@ The script identifies design-related content in the session output and creates N
 | Variable | Description |
 |---|---|
 | `NOTION_API_KEY` | Internal integration token from your Notion integration settings |
-| `NOTION_DESIGN_DB` | ID of the Notion database used to store design outputs |
-
-## Optional environment variables
-
-| Variable | Description |
-|---|---|
-| `NOTION_DESIGN_STATUS_PROPERTY` | Name of the status property for new design pages (default: `Status`) |
-| `NOTION_DESIGN_TYPE_PROPERTY` | Name of the select property used to categorise the design output type |
+| `NOTION_PARENT_PAGE_ID` | Page ID under which new design pages are created |

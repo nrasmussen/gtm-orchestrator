@@ -2,9 +2,13 @@
   "hooks": {
     "PostToolUse": [
       {
-        "type": "command",
         "matcher": "Write",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" linear create-ticket"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" linear create-ticket"
+          }
+        ]
       }
     ]
   }

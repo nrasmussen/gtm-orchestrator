@@ -9,7 +9,7 @@ Fires on the `PostToolUse` event, which triggers after every tool the agent uses
 ## What it runs
 
 ```
-orchestrator/sh/lemlist.sh add-lead
+orchestrator/run.sh lemlist add-lead
 ```
 
 The script extracts contact information from the tool result payload and calls the Lemlist API to add or update the lead in the target campaign.

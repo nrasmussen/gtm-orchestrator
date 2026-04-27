@@ -1,43 +1,66 @@
 #!/usr/bin/env bash
+# validate.sh — Verify the repo is in a working state and report which
+# integrations are configured.
+#
+# Checks:
+#   1. Every hook.json (and starter pack) is valid against the Claude Code schema.
+#   2. Every Python handler compiles cleanly.
+#   3. Every handler runs successfully with DRY_RUN=1 and a fixture payload.
+#   4. Per-integration env-var readiness.
+#   5. ~/.claude/settings.json hook introspection.
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# ---------------------------------------------------------------------------
-# .env handling
-# ---------------------------------------------------------------------------
-
-if [ ! -f "$REPO_ROOT/.env" ]; then
-  echo "[WARN] .env not found. Run: cp .env.example .env"
-  echo "       Then fill in your API keys before running this script again."
-else
-  # Source without executing expansions for unset vars
+if [ -f "$ROOT/.env" ]; then
   set +u
-  # shellcheck disable=SC1090
-  source "$REPO_ROOT/.env"
+  # shellcheck disable=SC1091
+  source "$ROOT/.env"
   set -u
 fi
 
-# ---------------------------------------------------------------------------
-# Helper
-# ---------------------------------------------------------------------------
+fail=0
 
-check_var() {
-  local name="$1"
-  local value="${!name:-}"
-  if [ -n "$value" ]; then
+echo "=== 1. Hook schema validation ==="
+if ! python3 "$ROOT/scripts/lib/validate-hook-json.py" \
+       "$ROOT"/hooks/*/*/hook.json "$ROOT"/examples/full-settings-*.json | tail -n 0; then
+  fail=1
+fi
+python3 "$ROOT/scripts/lib/validate-hook-json.py" \
+       "$ROOT"/hooks/*/*/hook.json "$ROOT"/examples/full-settings-*.json \
+  | grep -E "^FAIL|^     " || echo "  all hook.json files pass schema."
+
+echo ""
+echo "=== 2. Python handler syntax ==="
+if python3 -m py_compile "$ROOT"/orchestrator/dispatch.py "$ROOT"/orchestrator/py/*.py 2>/dev/null; then
+  echo "  all handlers compile."
+else
+  echo "  FAILED: see errors above"
+  fail=1
+fi
+
+echo ""
+echo "=== 3. Dry-run smoke tests ==="
+export DRY_RUN=1
+fixture='{"action":"smoke","email":"test@example.com","content":"smoke","title":"smoke","file_key":"abc","node_id":"1:1","campaign_id":"c","table":"t","fields":{},"team_id":"t","query":"is:unread","data":{}}'
+for handler in "$ROOT"/orchestrator/py/*.py; do
+  name="$(basename "$handler" .py)"
+  if echo "$fixture" | python3 "$handler" >/dev/null 2>&1; then
     echo "  [OK]      $name"
-    return 0
   else
-    echo "  [MISSING] $name"
-    return 1
+    echo "  [FAIL]    $name"
+    fail=1
   fi
-}
+done
+unset DRY_RUN
 
+# ---------------------------------------------------------------------------
+# 4. Env vars
+# ---------------------------------------------------------------------------
 configured=0
 total=0
-
 check_integration() {
   local name="$1"
   total=$((total + 1))
@@ -50,153 +73,68 @@ check_integration() {
   fi
 }
 
-# ---------------------------------------------------------------------------
-# Integrations by category
-# ---------------------------------------------------------------------------
-
 echo ""
-echo "=== Notifications ==="
+echo "=== 4. Integration env vars ==="
+echo "--- Notifications ---"
 check_integration SLACK_WEBHOOK_URL
 check_integration DISCORD_WEBHOOK_URL
-
-echo ""
-echo "=== CRM ==="
+echo "--- CRM ---"
 check_integration ATTIO_API_KEY
 check_integration HUBSPOT_TOKEN
 check_integration AIRTABLE_TOKEN
 check_integration AIRTABLE_BASE_ID
-
-echo ""
-echo "=== Outbound ==="
+check_integration APOLLO_API_KEY
+echo "--- Outbound ---"
 check_integration LEMLIST_API_KEY
 check_integration INSTANTLY_API_KEY
 check_integration SMARTLEAD_API_KEY
 check_integration CLAY_WEBHOOK_URL
-
-echo ""
-echo "=== Content ==="
+echo "--- Content / Design ---"
 check_integration TYPEFULLY_API_KEY
-
-echo ""
-echo "=== Automation ==="
+check_integration NOTION_API_KEY
+check_integration FIGMA_API_KEY
+check_integration LINEAR_API_KEY
+echo "--- Automation ---"
 check_integration ZAPIER_WEBHOOK_URL
 check_integration N8N_WEBHOOK_URL
 check_integration MAKE_WEBHOOK_URL
-
-# ---------------------------------------------------------------------------
-# CLAUDE_GTM_DIR
-# ---------------------------------------------------------------------------
+echo "--- Data / Sheets ---"
+check_integration GOOGLE_SHEETS_API_KEY
+check_integration GOOGLE_SHEETS_SPREADSHEET_ID
 
 echo ""
-echo "=== Environment ==="
-
-CLAUDE_GTM_DIR_VALUE="${CLAUDE_GTM_DIR:-}"
-if [ -z "$CLAUDE_GTM_DIR_VALUE" ]; then
-  # Attempt auto-detection: use repo root if it looks right
-  if [ -f "$REPO_ROOT/.env.example" ]; then
-    echo "  [OK]      CLAUDE_GTM_DIR (auto-detected: $REPO_ROOT)"
-    CLAUDE_GTM_DIR_VALUE="$REPO_ROOT"
-  else
-    echo "  [MISSING] CLAUDE_GTM_DIR (run scripts/setup.sh to configure)"
-  fi
+echo "=== 5. CLAUDE_GTM_DIR ==="
+if [ -n "${CLAUDE_GTM_DIR:-}" ]; then
+  echo "  [OK]      CLAUDE_GTM_DIR=$CLAUDE_GTM_DIR"
 else
-  echo "  [OK]      CLAUDE_GTM_DIR=$CLAUDE_GTM_DIR_VALUE"
+  echo "  [MISSING] CLAUDE_GTM_DIR (run ./scripts/install.sh or export manually)"
 fi
 
-# ---------------------------------------------------------------------------
-# ~/.claude/settings.json hooks check
-# ---------------------------------------------------------------------------
-
 echo ""
-echo "=== Claude Hooks ==="
-
+echo "=== 6. Claude settings.json hooks ==="
 SETTINGS_FILE="$HOME/.claude/settings.json"
-hooks_found=()
-
 if [ ! -f "$SETTINGS_FILE" ]; then
-  echo "  [MISSING] ~/.claude/settings.json not found"
+  echo "  [INFO]    $SETTINGS_FILE not found; run ./scripts/install.sh to install hooks"
 else
-  if command -v python3 &>/dev/null; then
-    hooks_raw=$(python3 -c "
+  python3 - "$SETTINGS_FILE" <<'PY' || true
 import json, sys
-try:
-    data = json.load(open('$SETTINGS_FILE'))
-    hooks = data.get('hooks', {})
-    names = []
-    for event, entries in hooks.items():
-        if isinstance(entries, list):
-            for entry in entries:
-                if isinstance(entry, dict):
-                    for matcher in entry.get('hooks', []):
-                        cmd = matcher.get('command', '')
-                        if cmd:
-                            names.append(event + ':' + cmd[:60])
-                elif isinstance(entry, str):
-                    names.append(event + ':' + entry[:60])
-        elif isinstance(entries, dict):
-            names.append(event + ':' + str(entries)[:60])
-    print('\n'.join(names) if names else '')
-except Exception as e:
-    print('')
-" 2>/dev/null || true)
-    if [ -n "$hooks_raw" ]; then
-      echo "  [OK]      ~/.claude/settings.json contains hooks:"
-      while IFS= read -r line; do
-        [ -n "$line" ] && echo "            - $line"
-        hooks_found+=("$line")
-      done <<< "$hooks_raw"
-    else
-      echo "  [OK]      ~/.claude/settings.json exists but no hooks configured"
-    fi
-  else
-    if grep -q '"hooks"' "$SETTINGS_FILE" 2>/dev/null; then
-      echo "  [OK]      ~/.claude/settings.json exists and contains a 'hooks' key"
-    else
-      echo "  [OK]      ~/.claude/settings.json exists but no hooks key found"
-    fi
-  fi
+data = json.load(open(sys.argv[1]))
+hooks = data.get("hooks", {})
+n = 0
+for ev, entries in hooks.items():
+    if isinstance(entries, list):
+        for entry in entries:
+            if isinstance(entry, dict):
+                for h in entry.get("hooks", []):
+                    if isinstance(h, dict) and "$CLAUDE_GTM_DIR" in h.get("command", ""):
+                        print(f"  [OK]      {ev}: {h['command'][:80]}")
+                        n += 1
+if n == 0:
+    print("  [INFO]    no GTM hooks installed in settings.json")
+PY
 fi
 
-# ---------------------------------------------------------------------------
-# Summary
-# ---------------------------------------------------------------------------
-
 echo ""
-echo "=============================="
-echo "Summary"
 echo "=============================="
 echo "$configured of $total integrations configured."
-
-if [ "$configured" -eq 0 ]; then
-  echo "No integrations are ready. Fill in .env to get started."
-else
-  echo ""
-  echo "Ready to use:"
-
-  # Notifications
-  [ -n "${SLACK_WEBHOOK_URL:-}" ]    && echo "  - Slack notifications (hooks/notifications/slack-*)"
-  [ -n "${DISCORD_WEBHOOK_URL:-}" ]  && echo "  - Discord notifications (hooks/notifications/discord-*)"
-
-  # CRM
-  [ -n "${ATTIO_API_KEY:-}" ]        && echo "  - Attio CRM sync (hooks/crm/attio-*)"
-  [ -n "${HUBSPOT_TOKEN:-}" ]        && echo "  - HubSpot CRM sync (hooks/crm/hubspot-*)"
-  if [ -n "${AIRTABLE_TOKEN:-}" ] && [ -n "${AIRTABLE_BASE_ID:-}" ]; then
-    echo "  - Airtable logging (hooks/crm/airtable-*)"
-  fi
-
-  # Outbound
-  [ -n "${LEMLIST_API_KEY:-}" ]      && echo "  - Lemlist outbound (hooks/outbound/lemlist-*)"
-  [ -n "${INSTANTLY_API_KEY:-}" ]    && echo "  - Instantly campaigns (hooks/outbound/instantly-*)"
-  [ -n "${SMARTLEAD_API_KEY:-}" ]    && echo "  - Smartlead campaigns (hooks/outbound/smartlead-*)"
-  [ -n "${CLAY_WEBHOOK_URL:-}" ]     && echo "  - Clay table sync (hooks/outbound/clay-*)"
-
-  # Content
-  [ -n "${TYPEFULLY_API_KEY:-}" ]    && echo "  - Typefully draft queue (hooks/content/typefully-*)"
-
-  # Automation
-  [ -n "${ZAPIER_WEBHOOK_URL:-}" ]   && echo "  - Zapier automation (hooks/automation/zapier-*)"
-  [ -n "${N8N_WEBHOOK_URL:-}" ]      && echo "  - n8n automation (hooks/automation/n8n-*)"
-  [ -n "${MAKE_WEBHOOK_URL:-}" ]     && echo "  - Make automation (hooks/automation/make-*)"
-fi
-
-echo ""
+[ "$fail" = "0" ] && echo "validate: PASS" || { echo "validate: FAIL"; exit 1; }

@@ -2,31 +2,47 @@
   "hooks": {
     "Stop": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" typefully draft",
-        "description": "typefully-draft-queue: queues any content output as a Typefully draft for scheduling"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" typefully draft"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion save-content",
-        "description": "notion-content-archive: saves the session output to a Notion content archive database"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion save-content"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion save-design",
-        "description": "claude-design-output-to-notion: saves design prompt output (decks, carousels, one-pagers) to a Notion page"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" notion save-design"
+          }
+        ]
       },
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack notify",
-        "description": "slack-ping-on-stop: sends a Slack ping when a content generation task finishes"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" slack notify"
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
-        "type": "command",
-        "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" linear create-ticket",
-        "description": "linear-ticket-from-brief: creates a Linear ticket from a content brief or task description when a file or doc tool is used"
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_GTM_DIR/orchestrator/run.sh\" linear create-ticket"
+          }
+        ]
       }
     ]
   }
